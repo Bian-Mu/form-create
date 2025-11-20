@@ -1,16 +1,23 @@
 # Form Designer Example
 
-A React + TypeScript form designer with drag-and-drop capabilities, Redux state management, and export functionality.
+A React + TypeScript form designer with advanced drag-and-drop capabilities, Redux state management, and export functionality.
 
 ## Features
 
-- **Drag-and-Drop Interface**: Use @dnd-kit to drag components from the palette to the canvas
+- **Advanced Drag-and-Drop Interface**: 
+  - Custom drag preview with portal overlay that follows the cursor
+  - Visual insert highlight indicators showing drop positions
+  - Drag state management with Redux for smooth operations
+  - Uses @dnd-kit for modern, React 19 compatible drag-and-drop
 - **Component Palette**: Variety of form components including:
   - Container, Row, Column (layout components)
   - Input, TextArea, Select (form controls)
   - Checkbox, Button, Text, Divider (UI elements)
 - **Properties Panel**: Edit selected component properties (label, placeholder, default value, required flag)
-- **Redux State Management**: Flattened node storage with Redux Toolkit for efficient updates
+- **Redux State Management**: 
+  - Flattened node storage with Redux Toolkit for efficient updates
+  - Separate dragSlice for managing temporary drag state
+  - Prevents unnecessary re-renders during drag operations
 - **Export Functionality**:
   - **PDF Export**: Using @react-pdf/renderer for high-quality PDF generation
   - **HTML Export**: Generates HTML files that can be opened in Word and saved as DOCX
@@ -20,8 +27,8 @@ A React + TypeScript form designer with drag-and-drop capabilities, Redux state 
 
 - **React 19** - UI framework
 - **TypeScript** - Type safety
-- **Redux Toolkit** - State management
-- **@dnd-kit** - Modern drag-and-drop library
+- **Redux Toolkit** - State management (formSlice + dragSlice)
+- **@dnd-kit** - Modern drag-and-drop library with portal support
 - **Ant Design** - UI components
 - **@react-pdf/renderer** - PDF generation
 - **Vite** - Build tool
@@ -67,7 +74,9 @@ npm run lint
 
 ### State Management
 
-The form state uses a flattened structure:
+The application uses two Redux slices for optimal performance:
+
+**Form State (formSlice)** - Flattened structure for the form tree:
 ```typescript
 {
   nodes: Record<string, FormNode>,  // Flat map of all nodes
@@ -76,20 +85,48 @@ The form state uses a flattened structure:
 }
 ```
 
-This approach avoids deep nesting and makes updates more efficient.
+**Drag State (dragSlice)** - Temporary state during drag operations:
+```typescript
+{
+  draggingId: string | null,        // Element being dragged
+  sourceParentId: string | null,    // Source parent container
+  sourceIndex: number | null,       // Original position
+  destinationParentId: string | null, // Target parent
+  destinationIndex: number | null,  // Target position
+  isDragging: boolean,              // Drag active flag
+  dragType: 'palette' | 'canvas'    // Drag source type
+}
+```
+
+This separation avoids deep nesting issues and prevents unnecessary re-renders during drag operations.
+
+### Drag-and-Drop Features
+
+- **DragOverlay with Portal**: Custom drag preview that follows the cursor, rendered via portal to `document.body`
+- **Insert Highlights**: Visual indicators showing where components will be dropped
+- **Drag State Tracking**: Redux integration for managing drag state across components
+- **CSS Animations**: Smooth transitions and visual feedback during drag operations
 
 ### Components
 
-- **Palette**: Draggable component items
-- **Canvas**: Drop zone and rendering area
+- **Palette**: Draggable component items with drag state tracking
+- **Canvas**: Drop zone with insert highlight indicators
 - **Renderer**: Recursive component that renders form nodes
 - **PropertiesPanel**: Edit panel for selected components
 
 ### Utilities
 
-- **dndHelpers.ts**: Drag-and-drop logic
+- **dndHelpers.ts**: Drag-and-drop logic for handling drop events
 - **exportPdf.tsx**: PDF export using @react-pdf
 - **exportDocx.tsx**: HTML export (fallback for DOCX)
+
+### Styling
+
+- **drag.css**: Comprehensive styles for drag operations including:
+  - Custom drag preview portal styles
+  - Insert highlight animations
+  - Drop zone visual feedback
+  - Draggable item hover effects
 
 ## Screenshots
 
