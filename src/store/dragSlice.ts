@@ -25,6 +25,17 @@ const initialState: DragState = {
   dragType: null,
 };
 
+// Helper to reset drag state
+const resetDragState = (): DragState => ({
+  draggingId: null,
+  sourceParentId: null,
+  sourceIndex: null,
+  destinationParentId: null,
+  destinationIndex: null,
+  isDragging: false,
+  dragType: null,
+});
+
 const dragSlice = createSlice({
   name: 'drag',
   initialState,
@@ -54,26 +65,8 @@ const dragSlice = createSlice({
       state.destinationParentId = action.payload.destinationParentId;
       state.destinationIndex = action.payload.destinationIndex;
     },
-    endDrag: (state) => {
-      // Reset drag state
-      state.draggingId = null;
-      state.sourceParentId = null;
-      state.sourceIndex = null;
-      state.destinationParentId = null;
-      state.destinationIndex = null;
-      state.isDragging = false;
-      state.dragType = null;
-    },
-    cancelDrag: (state) => {
-      // Cancel drag without performing move
-      state.draggingId = null;
-      state.sourceParentId = null;
-      state.sourceIndex = null;
-      state.destinationParentId = null;
-      state.destinationIndex = null;
-      state.isDragging = false;
-      state.dragType = null;
-    },
+    endDrag: () => resetDragState(),
+    cancelDrag: () => resetDragState(),
   },
 });
 

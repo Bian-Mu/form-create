@@ -35,7 +35,7 @@ export const Canvas: React.FC = () => {
     >
       <div
         ref={setNodeRef}
-        className={`${isOver ? 'drop-zone-over' : ''}`}
+        className={isOver ? 'drop-zone-over' : ''}
         style={{
           minHeight: '400px',
           border: '2px dashed #d9d9d9',

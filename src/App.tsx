@@ -55,7 +55,7 @@ function App() {
     const { over } = event;
     if (over) {
       const overData = over.data.current;
-      const parentId = overData?.nodeId || rootId;
+      const parentId = overData?.nodeId || 'root';
       
       dispatch(
         updateDragDestination({
