@@ -1,8 +1,8 @@
 /**
- * DOCX export utility
- * Note: html-to-docx has Node.js dependencies that don't work well in browser.
- * This provides a simple fallback that creates an HTML file.
+ * DOCX export utility using html-to-docx
+ * Converts HTML DOM to proper DOCX format and triggers download
  */
+import HTMLtoDOCX from 'html-to-docx';
 import type { FormNode } from '../types';
 
 /**
@@ -23,32 +23,34 @@ function nodesToHTML(node: FormNode, nodes: Record<string, FormNode>): string {
   switch (node.type) {
     case 'container':
       return `
-        <div style="margin-bottom: 10px;">
-          ${node.label ? `<p style="font-weight: bold;">${node.label}</p>` : ''}
+        <div style="margin-bottom: 10px; border: 1px solid #ddd; padding: 10px;">
+          ${node.label ? `<p style="font-weight: bold; margin-bottom: 8px;">${node.label}</p>` : ''}
           ${renderChildren()}
         </div>
       `;
 
     case 'row':
       return `
-        <div style="display: flex; margin-bottom: 10px;">
-          ${renderChildren()}
-        </div>
+        <table style="width: 100%; margin-bottom: 10px; border-collapse: collapse;">
+          <tr>
+            ${renderChildren()}
+          </tr>
+        </table>
       `;
 
     case 'col':
       return `
-        <div style="flex: 1; margin-right: 10px;">
+        <td style="border: 1px solid #ddd; padding: 8px; vertical-align: top;">
           ${renderChildren()}
-        </div>
+        </td>
       `;
 
     case 'input':
       return `
         <div style="margin-bottom: 10px;">
-          ${node.label ? `<p style="font-weight: bold;">${node.label}</p>` : ''}
-          <div style="border: 1px solid #ccc; padding: 8px; background-color: #f5f5f5;">
-            ${node.placeholder || ''}
+          ${node.label ? `<p style="font-weight: bold; margin-bottom: 4px;">${node.label}</p>` : ''}
+          <div style="border: 1px solid #ccc; padding: 8px; background-color: #f5f5f5; min-height: 20px;">
+            ${node.placeholder || '___________________________'}
           </div>
         </div>
       `;
@@ -56,8 +58,8 @@ function nodesToHTML(node: FormNode, nodes: Record<string, FormNode>): string {
     case 'textarea':
       return `
         <div style="margin-bottom: 10px;">
-          ${node.label ? `<p style="font-weight: bold;">${node.label}</p>` : ''}
-          <div style="border: 1px solid #ccc; padding: 8px; height: 80px; background-color: #f5f5f5;">
+          ${node.label ? `<p style="font-weight: bold; margin-bottom: 4px;">${node.label}</p>` : ''}
+          <div style="border: 1px solid #ccc; padding: 8px; min-height: 80px; background-color: #f5f5f5;">
             ${node.placeholder || ''}
           </div>
         </div>
@@ -66,9 +68,9 @@ function nodesToHTML(node: FormNode, nodes: Record<string, FormNode>): string {
     case 'select':
       return `
         <div style="margin-bottom: 10px;">
-          ${node.label ? `<p style="font-weight: bold;">${node.label}</p>` : ''}
+          ${node.label ? `<p style="font-weight: bold; margin-bottom: 4px;">${node.label}</p>` : ''}
           <div style="border: 1px solid #ccc; padding: 8px; background-color: #f5f5f5;">
-            ${node.placeholder || 'Select...'}
+            ${node.placeholder || 'Select an option...'}
           </div>
         </div>
       `;
@@ -76,14 +78,14 @@ function nodesToHTML(node: FormNode, nodes: Record<string, FormNode>): string {
     case 'checkbox':
       return `
         <div style="margin-bottom: 10px;">
-          <p>☐ ${node.label || 'Checkbox'}</p>
+          <p style="margin: 0;">☐ ${node.label || 'Checkbox'}</p>
         </div>
       `;
 
     case 'button':
       return `
         <div style="margin-bottom: 10px;">
-          <div style="background-color: #1890ff; color: white; padding: 8px; text-align: center; border-radius: 4px; display: inline-block;">
+          <div style="background-color: #1890ff; color: white; padding: 8px 16px; text-align: center; border-radius: 4px; display: inline-block;">
             ${node.label || 'Button'}
           </div>
         </div>
@@ -92,12 +94,12 @@ function nodesToHTML(node: FormNode, nodes: Record<string, FormNode>): string {
     case 'text':
       return `
         <div style="margin-bottom: 10px;">
-          <p>${node.label || 'Text'}</p>
+          <p style="margin: 0;">${node.label || 'Text'}</p>
         </div>
       `;
 
     case 'divider':
-      return '<hr style="margin: 10px 0; border: 1px solid #ccc;" />';
+      return '<hr style="margin: 15px 0; border: 0; border-top: 1px solid #ccc;" />';
 
     default:
       return '';
@@ -105,12 +107,14 @@ function nodesToHTML(node: FormNode, nodes: Record<string, FormNode>): string {
 }
 
 /**
- * Export form to HTML (as a fallback for DOCX)
- * Users can open the HTML in Word and save as DOCX
+ * Export form to DOCX using html-to-docx library
+ * Converts HTML DOM to proper DOCX format and triggers download
  */
 export async function exportToDOCX(nodes: Record<string, FormNode>, rootId: string): Promise<void> {
   try {
     const rootNode = nodes[rootId];
+    
+    // Generate HTML content
     const htmlContent = `
       <!DOCTYPE html>
       <html>
@@ -118,7 +122,17 @@ export async function exportToDOCX(nodes: Record<string, FormNode>, rootId: stri
           <meta charset="UTF-8">
           <title>Form Export</title>
           <style>
-            body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; }
+            body { 
+              font-family: Arial, sans-serif; 
+              max-width: 800px; 
+              margin: 20px auto; 
+              padding: 20px; 
+            }
+            h1 {
+              color: #1890ff;
+              border-bottom: 2px solid #1890ff;
+              padding-bottom: 10px;
+            }
           </style>
         </head>
         <body>
@@ -128,15 +142,22 @@ export async function exportToDOCX(nodes: Record<string, FormNode>, rootId: stri
       </html>
     `;
 
-    const blob = new Blob([htmlContent], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
+    // Convert HTML to DOCX using html-to-docx
+    const docxBlob = await HTMLtoDOCX(htmlContent, null, {
+      table: { row: { cantSplit: true } },
+      footer: true,
+      pageNumber: true,
+    });
+
+    // Trigger download
+    const url = URL.createObjectURL(docxBlob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `form-${Date.now()}.html`;
+    link.download = `form-export-${Date.now()}.docx`;
     link.click();
     URL.revokeObjectURL(url);
   } catch (error) {
-    console.error('Error exporting HTML:', error);
+    console.error('Error exporting to DOCX:', error);
     throw error;
   }
 }

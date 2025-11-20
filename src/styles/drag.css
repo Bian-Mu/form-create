@@ -1,7 +1,13 @@
 /**
  * Drag and drop styles
  * Provides visual feedback for drag operations including custom preview and insert highlights
+ * Enhanced with default borders during drag state for better component visibility
  */
+
+/* Global dragging state - adds default borders to all components */
+.global-dragging * {
+  transition: border 0.2s ease, box-shadow 0.2s ease;
+}
 
 /* Custom drag preview portal - follows mouse cursor */
 .drag-preview-portal {
@@ -39,10 +45,11 @@
 .insert-highlight {
   position: relative;
   height: 4px;
-  margin: 2px 0;
+  margin: 4px 0;
   background: linear-gradient(90deg, #1890ff 0%, #40a9ff 100%);
   border-radius: 2px;
-  animation: pulse 1s ease-in-out infinite;
+  animation: pulse 1.5s ease-in-out infinite;
+  box-shadow: 0 0 8px rgba(24, 144, 255, 0.5);
 }
 
 .insert-highlight::before {
@@ -55,6 +62,7 @@
   background: #1890ff;
   border-radius: 50%;
   border: 2px solid #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .insert-highlight::after {
@@ -67,6 +75,7 @@
   background: #1890ff;
   border-radius: 50%;
   border: 2px solid #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 @keyframes pulse {
@@ -75,15 +84,15 @@
     transform: scaleY(1);
   }
   50% {
-    opacity: 0.7;
-    transform: scaleY(1.2);
+    opacity: 0.6;
+    transform: scaleY(1.5);
   }
 }
 
 /* Drop zone highlight - container accepting drops */
 .drop-zone-active {
   background: rgba(24, 144, 255, 0.05);
-  border: 2px dashed #1890ff;
+  border: 2px dashed #1890ff !important;
   border-radius: 4px;
   min-height: 60px;
   transition: all 0.2s ease;
@@ -91,7 +100,7 @@
 
 .drop-zone-over {
   background: rgba(24, 144, 255, 0.1);
-  border-color: #40a9ff;
+  border-color: #40a9ff !important;
 }
 
 /* Draggable item cursor */
@@ -112,7 +121,15 @@
 /* Nested container indicators */
 .nested-container {
   position: relative;
-  min-height: 40px;
+  min-height: 60px;
+  padding: 8px;
+  border: 1px dashed #d9d9d9;
+  border-radius: 4px;
+  margin: 4px 0;
+}
+
+.nested-container.empty {
+  background: rgba(0, 0, 0, 0.02);
 }
 
 .nested-container.empty::after {
@@ -147,4 +164,10 @@
 .palette-item-dragging {
   opacity: 0.5;
   transform: scale(0.95);
+}
+
+/* Container highlight when it's a drop target ancestor */
+.container-drop-ancestor {
+  box-shadow: 0 0 0 1px rgba(24, 144, 255, 0.3);
+  transition: box-shadow 0.2s ease;
 }
