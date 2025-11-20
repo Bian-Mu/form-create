@@ -1,0 +1,58 @@
+{
+  "nodes": {
+    "root": {
+      "id": "root",
+      "type": "container",
+      "label": "Sample Form",
+      "children": ["node_1", "node_2", "node_3"]
+    },
+    "node_1": {
+      "id": "node_1",
+      "type": "input",
+      "label": "Full Name",
+      "placeholder": "Enter your full name",
+      "required": true
+    },
+    "node_2": {
+      "id": "node_2",
+      "type": "input",
+      "label": "Email",
+      "placeholder": "Enter your email",
+      "required": true
+    },
+    "node_3": {
+      "id": "node_3",
+      "type": "row",
+      "children": ["node_4", "node_5"]
+    },
+    "node_4": {
+      "id": "node_4",
+      "type": "col",
+      "children": ["node_6"]
+    },
+    "node_5": {
+      "id": "node_5",
+      "type": "col",
+      "children": ["node_7"]
+    },
+    "node_6": {
+      "id": "node_6",
+      "type": "select",
+      "label": "Country",
+      "placeholder": "Select country",
+      "options": [
+        { "label": "USA", "value": "usa" },
+        { "label": "Canada", "value": "canada" },
+        { "label": "UK", "value": "uk" }
+      ]
+    },
+    "node_7": {
+      "id": "node_7",
+      "type": "input",
+      "label": "City",
+      "placeholder": "Enter your city"
+    }
+  },
+  "rootId": "root",
+  "selectedNodeId": null
+}
