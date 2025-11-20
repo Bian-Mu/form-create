@@ -1,142 +1,209 @@
 /**
- * DOCX export utility
- * Note: html-to-docx has Node.js dependencies that don't work well in browser.
- * This provides a simple fallback that creates an HTML file.
+ * DOCX export utility using docx library
+ * Converts form nodes to proper DOCX format and triggers download
  */
+import { Document, Paragraph, TextRun, HeadingLevel, Table, TableRow, TableCell, WidthType, BorderStyle, AlignmentType, Packer } from 'docx';
+import { saveAs } from 'file-saver';
 import type { FormNode } from '../types';
 
 /**
- * Convert form nodes to HTML string
+ * Convert form nodes to docx paragraphs and tables
  */
-function nodesToHTML(node: FormNode, nodes: Record<string, FormNode>): string {
-  const renderChildren = (): string => {
-    if (!node.children) return '';
-    return node.children
-      .map((childId) => {
-        const childNode = nodes[childId];
-        if (!childNode) return '';
-        return nodesToHTML(childNode, nodes);
-      })
-      .join('');
+function nodesToDocxElements(node: FormNode, nodes: Record<string, FormNode>): (Paragraph | Table)[] {
+  const elements: (Paragraph | Table)[] = [];
+
+  const renderChildren = (): (Paragraph | Table)[] => {
+    if (!node.children) return [];
+    const childElements: (Paragraph | Table)[] = [];
+    node.children.forEach((childId) => {
+      const childNode = nodes[childId];
+      if (!childNode) return;
+      childElements.push(...nodesToDocxElements(childNode, nodes));
+    });
+    return childElements;
   };
 
   switch (node.type) {
     case 'container':
-      return `
-        <div style="margin-bottom: 10px;">
-          ${node.label ? `<p style="font-weight: bold;">${node.label}</p>` : ''}
-          ${renderChildren()}
-        </div>
-      `;
+      if (node.label) {
+        elements.push(
+          new Paragraph({
+            text: node.label,
+            heading: HeadingLevel.HEADING_2,
+            spacing: { before: 200, after: 100 },
+          })
+        );
+      }
+      elements.push(...renderChildren());
+      break;
 
     case 'row':
-      return `
-        <div style="display: flex; margin-bottom: 10px;">
-          ${renderChildren()}
-        </div>
-      `;
+      // Create a table row with columns
+      const childCells = node.children?.map((childId) => {
+        const childNode = nodes[childId];
+        if (!childNode) return new TableCell({ children: [] });
+        const cellContent = nodesToDocxElements(childNode, nodes);
+        return new TableCell({
+          children: cellContent.length > 0 ? cellContent : [new Paragraph({ text: '' })],
+          borders: {
+            top: { style: BorderStyle.SINGLE, size: 1, color: 'DDDDDD' },
+            bottom: { style: BorderStyle.SINGLE, size: 1, color: 'DDDDDD' },
+            left: { style: BorderStyle.SINGLE, size: 1, color: 'DDDDDD' },
+            right: { style: BorderStyle.SINGLE, size: 1, color: 'DDDDDD' },
+          },
+        });
+      }) || [];
+
+      elements.push(
+        new Table({
+          rows: [new TableRow({ children: childCells })],
+          width: { size: 100, type: WidthType.PERCENTAGE },
+        })
+      );
+      break;
 
     case 'col':
-      return `
-        <div style="flex: 1; margin-right: 10px;">
-          ${renderChildren()}
-        </div>
-      `;
+      // Render column content directly
+      elements.push(...renderChildren());
+      break;
 
     case 'input':
-      return `
-        <div style="margin-bottom: 10px;">
-          ${node.label ? `<p style="font-weight: bold;">${node.label}</p>` : ''}
-          <div style="border: 1px solid #ccc; padding: 8px; background-color: #f5f5f5;">
-            ${node.placeholder || ''}
-          </div>
-        </div>
-      `;
+      if (node.label) {
+        elements.push(
+          new Paragraph({
+            children: [new TextRun({ text: node.label, bold: true })],
+            spacing: { before: 100, after: 50 },
+          })
+        );
+      }
+      elements.push(
+        new Paragraph({
+          text: node.placeholder || '________________________________',
+          spacing: { after: 100 },
+          border: {
+            bottom: { style: BorderStyle.SINGLE, size: 6, color: 'CCCCCC' },
+          },
+        })
+      );
+      break;
 
     case 'textarea':
-      return `
-        <div style="margin-bottom: 10px;">
-          ${node.label ? `<p style="font-weight: bold;">${node.label}</p>` : ''}
-          <div style="border: 1px solid #ccc; padding: 8px; height: 80px; background-color: #f5f5f5;">
-            ${node.placeholder || ''}
-          </div>
-        </div>
-      `;
+      if (node.label) {
+        elements.push(
+          new Paragraph({
+            children: [new TextRun({ text: node.label, bold: true })],
+            spacing: { before: 100, after: 50 },
+          })
+        );
+      }
+      elements.push(
+        new Paragraph({
+          text: node.placeholder || '',
+          spacing: { after: 100 },
+        }),
+        new Paragraph({ text: '_____________________________________' }),
+        new Paragraph({ text: '_____________________________________' }),
+        new Paragraph({ text: '_____________________________________', spacing: { after: 100 } })
+      );
+      break;
 
     case 'select':
-      return `
-        <div style="margin-bottom: 10px;">
-          ${node.label ? `<p style="font-weight: bold;">${node.label}</p>` : ''}
-          <div style="border: 1px solid #ccc; padding: 8px; background-color: #f5f5f5;">
-            ${node.placeholder || 'Select...'}
-          </div>
-        </div>
-      `;
+      if (node.label) {
+        elements.push(
+          new Paragraph({
+            children: [new TextRun({ text: node.label, bold: true })],
+            spacing: { before: 100, after: 50 },
+          })
+        );
+      }
+      elements.push(
+        new Paragraph({
+          text: node.placeholder || 'Select an option: _________________',
+          spacing: { after: 100 },
+        })
+      );
+      break;
 
     case 'checkbox':
-      return `
-        <div style="margin-bottom: 10px;">
-          <p>☐ ${node.label || 'Checkbox'}</p>
-        </div>
-      `;
+      elements.push(
+        new Paragraph({
+          text: `☐ ${node.label || 'Checkbox'}`,
+          spacing: { before: 50, after: 50 },
+        })
+      );
+      break;
 
     case 'button':
-      return `
-        <div style="margin-bottom: 10px;">
-          <div style="background-color: #1890ff; color: white; padding: 8px; text-align: center; border-radius: 4px; display: inline-block;">
-            ${node.label || 'Button'}
-          </div>
-        </div>
-      `;
+      elements.push(
+        new Paragraph({
+          text: `[${node.label || 'Button'}]`,
+          alignment: AlignmentType.CENTER,
+          spacing: { before: 100, after: 100 },
+        })
+      );
+      break;
 
     case 'text':
-      return `
-        <div style="margin-bottom: 10px;">
-          <p>${node.label || 'Text'}</p>
-        </div>
-      `;
+      elements.push(
+        new Paragraph({
+          text: node.label || 'Text',
+          spacing: { before: 50, after: 50 },
+        })
+      );
+      break;
 
     case 'divider':
-      return '<hr style="margin: 10px 0; border: 1px solid #ccc;" />';
+      elements.push(
+        new Paragraph({
+          text: '',
+          spacing: { before: 100, after: 100 },
+          border: {
+            bottom: { style: BorderStyle.SINGLE, size: 6, color: '000000' },
+          },
+        })
+      );
+      break;
 
     default:
-      return '';
+      break;
   }
+
+  return elements;
 }
 
 /**
- * Export form to HTML (as a fallback for DOCX)
- * Users can open the HTML in Word and save as DOCX
+ * Export form to DOCX using docx library
+ * Creates a proper DOCX document and triggers download
  */
 export async function exportToDOCX(nodes: Record<string, FormNode>, rootId: string): Promise<void> {
   try {
     const rootNode = nodes[rootId];
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="UTF-8">
-          <title>Form Export</title>
-          <style>
-            body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; }
-          </style>
-        </head>
-        <body>
-          <h1>Form Export</h1>
-          ${nodesToHTML(rootNode, nodes)}
-        </body>
-      </html>
-    `;
+    
+    // Generate document elements
+    const docElements = nodesToDocxElements(rootNode, nodes);
 
-    const blob = new Blob([htmlContent], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `form-${Date.now()}.html`;
-    link.click();
-    URL.revokeObjectURL(url);
+    // Create document
+    const doc = new Document({
+      sections: [
+        {
+          properties: {},
+          children: [
+            new Paragraph({
+              text: 'Form Export',
+              heading: HeadingLevel.HEADING_1,
+              spacing: { after: 200 },
+            }),
+            ...docElements,
+          ],
+        },
+      ],
+    });
+
+    // Generate and download DOCX
+    const blob = await Packer.toBlob(doc);
+    saveAs(blob, `form-export-${Date.now()}.docx`);
   } catch (error) {
-    console.error('Error exporting HTML:', error);
+    console.error('Error exporting to DOCX:', error);
     throw error;
   }
 }

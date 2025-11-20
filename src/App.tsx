@@ -16,7 +16,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Palette } from './components/Palette';
 import { Canvas } from './components/Canvas';
 import { PropertiesPanel } from './components/PropertiesPanel';
-import { addNode, loadForm } from './store/formSlice';
+import { addNode, loadForm, moveNode } from './store/formSlice';
 import { startDrag, updateDragDestination, endDrag } from './store/dragSlice';
 import { handleDragEnd } from './utils/dndHelpers';
 import { exportToPDF } from './utils/exportPdf';
@@ -48,6 +48,23 @@ function App() {
           dragType: 'palette',
         })
       );
+    } else if (activeData?.source === 'canvas') {
+      // Dragging from canvas (reordering)
+      const nodeId = activeData.nodeId as string;
+      const parentId = activeData.parentPath as string || 'root';
+      
+      // Find the current index of this node in its parent
+      const parent = nodes[parentId];
+      const currentIndex = parent?.children?.indexOf(nodeId) ?? -1;
+      
+      dispatch(
+        startDrag({
+          draggingId: nodeId,
+          sourceParentId: parentId,
+          sourceIndex: currentIndex,
+          dragType: 'canvas',
+        })
+      );
     }
   };
 
@@ -57,10 +74,14 @@ function App() {
       const overData = over.data.current;
       const parentId = overData?.nodeId || 'root';
       
+      // Calculate the index based on the children's position
+      const parent = nodes[parentId];
+      const childrenCount = parent?.children?.length || 0;
+      
       dispatch(
         updateDragDestination({
           destinationParentId: parentId,
-          destinationIndex: 0,
+          destinationIndex: childrenCount, // Default to end
         })
       );
     }
@@ -71,14 +92,35 @@ function App() {
     dispatch(endDrag());
 
     const result = handleDragEnd(event);
-    if (result?.shouldAdd && result.nodeType) {
+    
+    if (dragState.dragType === 'palette' && result?.shouldAdd && result.nodeType) {
+      // Adding new component from palette
       dispatch(
         addNode({
           parentId: result.parentId,
           node: { type: result.nodeType },
+          index: result.index,
         })
       );
       message.success(`Added ${result.nodeType} to form`);
+    } else if (dragState.dragType === 'canvas' && dragState.sourceParentId && dragState.draggingId) {
+      // Reordering existing component
+      const { over } = event;
+      if (over) {
+        const overData = over.data.current;
+        const targetParentId = overData?.nodeId || 'root';
+        const targetParent = nodes[targetParentId];
+        const targetIndex = targetParent?.children?.length || 0;
+        
+        dispatch(
+          moveNode({
+            nodeId: dragState.draggingId,
+            newParentId: targetParentId,
+            newIndex: targetIndex,
+          })
+        );
+        message.success('Component moved successfully');
+      }
     }
   };
 
@@ -94,9 +136,9 @@ function App() {
   const handleExportDOCX = async () => {
     try {
       await exportToDOCX(nodes, rootId);
-      message.success('HTML exported successfully! (Open in Word to save as DOCX)');
+      message.success('DOCX exported successfully!');
     } catch {
-      message.error('Failed to export HTML');
+      message.error('Failed to export DOCX');
     }
   };
 
@@ -123,7 +165,7 @@ function App() {
               Export PDF
             </Button>
             <Button type="primary" onClick={handleExportDOCX}>
-              Export HTML
+              Export DOCX
             </Button>
           </Space>
         </Header>
@@ -149,6 +191,11 @@ function App() {
           <div className="drag-preview-content">
             <span className="drag-preview-icon">🎯</span>
             Dragging component...
+          </div>
+        ) : dragState.isDragging && dragState.dragType === 'canvas' && dragState.draggingId ? (
+          <div className="drag-preview-content">
+            <span className="drag-preview-icon">📦</span>
+            Moving {nodes[dragState.draggingId]?.type || 'component'}...
           </div>
         ) : null}
       </DragOverlay>

@@ -1,6 +1,6 @@
 /**
  * Canvas component - main editing area with drag-and-drop support
- * Shows insert highlights during drag operations
+ * Shows insert highlights during drag operations with path-based droppable IDs
  */
 import { Card, Empty } from 'antd';
 import { useDroppable } from '@dnd-kit/core';
@@ -16,8 +16,12 @@ export const Canvas: React.FC = () => {
   const rootNode = nodes[rootId];
 
   const { setNodeRef, isOver } = useDroppable({
-    id: 'canvas-root',
-    data: { accepts: ['palette'], nodeId: rootId },
+    id: rootId,
+    data: { 
+      accepts: ['palette'], 
+      nodeId: rootId,
+      path: rootId,
+    },
   });
 
   const handleSelectNode = (nodeId: string) => {
@@ -25,7 +29,7 @@ export const Canvas: React.FC = () => {
   };
 
   const hasChildren = rootNode?.children && rootNode.children.length > 0;
-  const showInsertHighlight = dragState.isDragging && isOver;
+  const showInsertHighlight = dragState.isDragging && isOver && !hasChildren;
 
   return (
     <Card
@@ -35,7 +39,7 @@ export const Canvas: React.FC = () => {
     >
       <div
         ref={setNodeRef}
-        className={isOver ? 'drop-zone-over' : ''}
+        className={dragState.isDragging ? 'global-dragging' : ''}
         style={{
           minHeight: '400px',
           border: '2px dashed #d9d9d9',
@@ -50,17 +54,13 @@ export const Canvas: React.FC = () => {
             <Empty description="Drag components here to start building your form" />
           </>
         ) : (
-          <>
-            {showInsertHighlight && dragState.destinationIndex === 0 && (
-              <div className="insert-highlight" />
-            )}
-            <Renderer
-              node={rootNode}
-              nodes={nodes}
-              onSelect={handleSelectNode}
-              isSelected={selectedNodeId === rootId}
-            />
-          </>
+          <Renderer
+            node={rootNode}
+            nodes={nodes}
+            onSelect={handleSelectNode}
+            isSelected={selectedNodeId === rootId}
+            path={rootId}
+          />
         )}
       </div>
     </Card>
