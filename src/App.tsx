@@ -15,6 +15,7 @@ import { exportToDOCX } from './utils/exportDocx';
 import type { RootState, FormState } from './store';
 import sampleForm from './sampleForm.json';
 import './App.css';
+import './styles/drag.css';
 
 const { Header, Content, Sider } = Layout;
 const { Title } = Typography;

@@ -3,10 +3,12 @@
  */
 import { configureStore } from '@reduxjs/toolkit';
 import formReducer from './formSlice';
+import dragReducer from './dragSlice';
 
 export const store = configureStore({
   reducer: {
     form: formReducer,
+    drag: dragReducer,
   },
 });
 

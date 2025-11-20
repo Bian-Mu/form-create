@@ -1,0 +1,150 @@
+/**
+ * Drag and drop styles
+ * Provides visual feedback for drag operations including custom preview and insert highlights
+ */
+
+/* Custom drag preview portal - follows mouse cursor */
+.drag-preview-portal {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.8;
+  will-change: transform;
+}
+
+.drag-preview-content {
+  background: #fff;
+  border: 2px dashed #1890ff;
+  border-radius: 4px;
+  padding: 8px 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  font-size: 14px;
+  color: #333;
+  white-space: nowrap;
+}
+
+.drag-preview-icon {
+  display: inline-block;
+  margin-right: 8px;
+  font-size: 16px;
+}
+
+/* Dragging element - original position made transparent to avoid jitter */
+.dragging-element {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+/* Insert highlight indicator - shows where element will be dropped */
+.insert-highlight {
+  position: relative;
+  height: 4px;
+  margin: 2px 0;
+  background: linear-gradient(90deg, #1890ff 0%, #40a9ff 100%);
+  border-radius: 2px;
+  animation: pulse 1s ease-in-out infinite;
+}
+
+.insert-highlight::before {
+  content: '';
+  position: absolute;
+  left: -8px;
+  top: -4px;
+  width: 12px;
+  height: 12px;
+  background: #1890ff;
+  border-radius: 50%;
+  border: 2px solid #fff;
+}
+
+.insert-highlight::after {
+  content: '';
+  position: absolute;
+  right: -8px;
+  top: -4px;
+  width: 12px;
+  height: 12px;
+  background: #1890ff;
+  border-radius: 50%;
+  border: 2px solid #fff;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scaleY(1.2);
+  }
+}
+
+/* Drop zone highlight - container accepting drops */
+.drop-zone-active {
+  background: rgba(24, 144, 255, 0.05);
+  border: 2px dashed #1890ff;
+  border-radius: 4px;
+  min-height: 60px;
+  transition: all 0.2s ease;
+}
+
+.drop-zone-over {
+  background: rgba(24, 144, 255, 0.1);
+  border-color: #40a9ff;
+}
+
+/* Draggable item cursor */
+.draggable-item {
+  cursor: grab;
+  transition: transform 0.2s ease;
+}
+
+.draggable-item:active {
+  cursor: grabbing;
+}
+
+.draggable-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Nested container indicators */
+.nested-container {
+  position: relative;
+  min-height: 40px;
+}
+
+.nested-container.empty::after {
+  content: 'Drop components here';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #999;
+  font-size: 12px;
+  pointer-events: none;
+}
+
+/* Drag handle for reordering */
+.drag-handle {
+  cursor: grab;
+  color: #999;
+  padding: 4px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.draggable-item:hover .drag-handle {
+  opacity: 1;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+/* Palette item during drag */
+.palette-item-dragging {
+  opacity: 0.5;
+  transform: scale(0.95);
+}
