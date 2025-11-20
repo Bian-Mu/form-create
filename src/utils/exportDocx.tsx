@@ -1,7 +1,8 @@
 /**
- * DOCX export utility using html-to-docx
+ * DOCX export utility
+ * Note: html-to-docx has Node.js dependencies that don't work well in browser.
+ * This provides a simple fallback that creates an HTML file.
  */
-import HTMLToDocx from 'html-to-docx';
 import type { FormNode } from '../types';
 
 /**
@@ -104,7 +105,8 @@ function nodesToHTML(node: FormNode, nodes: Record<string, FormNode>): string {
 }
 
 /**
- * Export form to DOCX
+ * Export form to HTML (as a fallback for DOCX)
+ * Users can open the HTML in Word and save as DOCX
  */
 export async function exportToDOCX(nodes: Record<string, FormNode>, rootId: string): Promise<void> {
   try {
@@ -115,6 +117,9 @@ export async function exportToDOCX(nodes: Record<string, FormNode>, rootId: stri
         <head>
           <meta charset="UTF-8">
           <title>Form Export</title>
+          <style>
+            body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; }
+          </style>
         </head>
         <body>
           <h1>Form Export</h1>
@@ -123,19 +128,16 @@ export async function exportToDOCX(nodes: Record<string, FormNode>, rootId: stri
       </html>
     `;
 
-    const blob = await HTMLToDocx(htmlContent, null, {
-      orientation: 'portrait',
-      margins: { top: 1440, right: 1440, bottom: 1440, left: 1440 }, // 1 inch = 1440 twips
-    });
-
+    const blob = new Blob([htmlContent], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `form-${Date.now()}.docx`;
+    link.download = `form-${Date.now()}.html`;
     link.click();
     URL.revokeObjectURL(url);
   } catch (error) {
-    console.error('Error exporting DOCX:', error);
+    console.error('Error exporting HTML:', error);
     throw error;
   }
 }
+

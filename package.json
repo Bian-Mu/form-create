@@ -16,7 +16,6 @@
     "@react-pdf/renderer": "^4.2.0",
     "@reduxjs/toolkit": "^2.5.0",
     "antd": "^5.22.6",
-    "html-to-docx": "^1.8.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-redux": "^9.2.0"

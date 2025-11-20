@@ -12,7 +12,7 @@ import { addNode, loadForm } from './store/formSlice';
 import { handleDragEnd } from './utils/dndHelpers';
 import { exportToPDF } from './utils/exportPdf';
 import { exportToDOCX } from './utils/exportDocx';
-import type { RootState } from './store';
+import type { RootState, FormState } from './store';
 import sampleForm from './sampleForm.json';
 import './App.css';
 
@@ -40,7 +40,7 @@ function App() {
     try {
       await exportToPDF(nodes, rootId);
       message.success('PDF exported successfully!');
-    } catch (error) {
+    } catch {
       message.error('Failed to export PDF');
     }
   };
@@ -48,14 +48,14 @@ function App() {
   const handleExportDOCX = async () => {
     try {
       await exportToDOCX(nodes, rootId);
-      message.success('DOCX exported successfully!');
-    } catch (error) {
-      message.error('Failed to export DOCX');
+      message.success('HTML exported successfully! (Open in Word to save as DOCX)');
+    } catch {
+      message.error('Failed to export HTML');
     }
   };
 
   const handleLoadSample = () => {
-    dispatch(loadForm(sampleForm as any));
+    dispatch(loadForm(sampleForm as FormState));
     message.success('Sample form loaded!');
   };
 
@@ -72,7 +72,7 @@ function App() {
               Export PDF
             </Button>
             <Button type="primary" onClick={handleExportDOCX}>
-              Export DOCX
+              Export HTML
             </Button>
           </Space>
         </Header>

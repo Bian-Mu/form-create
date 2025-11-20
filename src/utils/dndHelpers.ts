@@ -51,7 +51,7 @@ export function canBeParent(nodeType: NodeType): boolean {
 /**
  * Validate if a node can be dropped into a parent
  */
-export function canDropInto(parentType: NodeType, _childType: NodeType): boolean {
+export function canDropInto(parentType: NodeType): boolean {
   // All container types can accept children
   if (canBeParent(parentType)) {
     return true;

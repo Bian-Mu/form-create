@@ -12,3 +12,6 @@ export const store = configureStore({
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
+
+// Re-export FormState for convenience
+export type { FormState } from '../types';

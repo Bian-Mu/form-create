@@ -1,6 +1,7 @@
 /**
  * PDF export utility using @react-pdf/renderer
  */
+/* eslint-disable react-refresh/only-export-components */
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet, pdf } from '@react-pdf/renderer';
 import type { FormNode } from '../types';
