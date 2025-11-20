@@ -1,5 +1,6 @@
 /**
  * Canvas component - main editing area with drag-and-drop support
+ * Shows insert highlights during drag operations
  */
 import { Card, Empty } from 'antd';
 import { useDroppable } from '@dnd-kit/core';
@@ -11,9 +12,10 @@ import { Renderer } from './Renderer';
 export const Canvas: React.FC = () => {
   const dispatch = useDispatch();
   const { nodes, rootId, selectedNodeId } = useSelector((state: RootState) => state.form);
+  const dragState = useSelector((state: RootState) => state.drag);
   const rootNode = nodes[rootId];
 
-  const { setNodeRef } = useDroppable({
+  const { setNodeRef, isOver } = useDroppable({
     id: 'canvas-root',
     data: { accepts: ['palette'], nodeId: rootId },
   });
@@ -23,6 +25,7 @@ export const Canvas: React.FC = () => {
   };
 
   const hasChildren = rootNode?.children && rootNode.children.length > 0;
+  const showInsertHighlight = dragState.isDragging && isOver;
 
   return (
     <Card
@@ -32,6 +35,7 @@ export const Canvas: React.FC = () => {
     >
       <div
         ref={setNodeRef}
+        className={`${isOver ? 'drop-zone-over' : ''}`}
         style={{
           minHeight: '400px',
           border: '2px dashed #d9d9d9',
@@ -41,14 +45,22 @@ export const Canvas: React.FC = () => {
         }}
       >
         {!hasChildren ? (
-          <Empty description="Drag components here to start building your form" />
+          <>
+            {showInsertHighlight && <div className="insert-highlight" />}
+            <Empty description="Drag components here to start building your form" />
+          </>
         ) : (
-          <Renderer
-            node={rootNode}
-            nodes={nodes}
-            onSelect={handleSelectNode}
-            isSelected={selectedNodeId === rootId}
-          />
+          <>
+            {showInsertHighlight && dragState.destinationIndex === 0 && (
+              <div className="insert-highlight" />
+            )}
+            <Renderer
+              node={rootNode}
+              nodes={nodes}
+              onSelect={handleSelectNode}
+              isSelected={selectedNodeId === rootId}
+            />
+          </>
         )}
       </div>
     </Card>
