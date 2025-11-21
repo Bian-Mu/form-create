@@ -26,7 +26,8 @@ interface InsertSlotProps {
 const InsertSlot: React.FC<InsertSlotProps> = ({ path, parentId, index, isPreview }) => {
   const dragState = useSelector((state: RootState) => state.drag);
   
-  const slotId = `${path}@${index}`;
+  // Use '::' delimiter to avoid conflicts with path separator '/'
+  const slotId = `${path}::${index}`;
   
   const { setNodeRef: setSlotRef, isOver: isSlotOver } = useDroppable({
     id: slotId,

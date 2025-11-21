@@ -15,9 +15,9 @@ export const Canvas: React.FC = () => {
   const dragState = useSelector((state: RootState) => state.drag);
   const rootNode = nodes[rootId];
 
-  // Use slot format for empty root
+  // Use slot format with '::' delimiter for consistency with Renderer
   const { setNodeRef, isOver } = useDroppable({
-    id: `${rootId}@0`,
+    id: `${rootId}::0`,
     data: { 
       parentId: rootId,
       index: 0,
