@@ -15,6 +15,54 @@ import { isAncestorPath } from '../utils/dndHelpers';
 const { TextArea } = Input;
 const { Text } = Typography;
 
+// Insert slot component - must be separate to use hooks
+interface InsertSlotProps {
+  path: string;
+  parentId: string;
+  index: number;
+  isPreview: boolean;
+}
+
+const InsertSlot: React.FC<InsertSlotProps> = ({ path, parentId, index, isPreview }) => {
+  const dragState = useSelector((state: RootState) => state.drag);
+  
+  const slotId = `${path}@${index}`;
+  
+  const { setNodeRef: setSlotRef, isOver: isSlotOver } = useDroppable({
+    id: slotId,
+    disabled: isPreview,
+    data: { 
+      parentId,
+      parentPath: path,
+      index,
+      type: 'slot',
+    },
+  });
+  
+  const isDragging = dragState.isDragging;
+  const shouldShowHighlight = 
+    isDragging && (
+      isSlotOver || 
+      (dragState.destinationParentId === parentId && dragState.destinationIndex === index)
+    );
+
+  if (isPreview) return null;
+
+  return (
+    <div 
+      ref={setSlotRef}
+      className={shouldShowHighlight ? 'insert-slot active' : 'insert-slot'}
+      style={{ 
+        minHeight: isDragging ? '8px' : '2px',
+        margin: '2px 0',
+        transition: 'all 0.2s ease',
+      }}
+    >
+      {shouldShowHighlight && <div className="insert-highlight" />}
+    </div>
+  );
+};
+
 // Long-press hook for drag handle
 const useLongPress = (callback: () => void, ms = 500) => {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -112,21 +160,15 @@ export const Renderer: React.FC<RendererProps> = ({
     ...node.style,
   };
 
-  // Render insert highlight at specific index
-  const renderInsertHighlight = (index: number) => {
-    if (!isDragging || isPreview) return null;
-    
-    const shouldShowHighlight = 
-      dragState.destinationParentId === node.id && 
-      dragState.destinationIndex === index;
-
-    if (!shouldShowHighlight) return null;
-
+  // Render insert slot as a droppable zone at specific index
+  const renderInsertSlot = (index: number) => {
     return (
-      <div 
-        key={`highlight-${index}`}
-        className="insert-highlight"
-        style={{ margin: '4px 0' }}
+      <InsertSlot 
+        key={`slot-${index}`}
+        path={path}
+        parentId={node.id}
+        index={index}
+        isPreview={isPreview}
       />
     );
   };
@@ -161,26 +203,23 @@ export const Renderer: React.FC<RendererProps> = ({
     );
   };
 
-  // Render children with insert highlights between them
+  // Render children with insert slots between them
   const renderChildrenWithHighlights = () => {
     if (!node.children || node.children.length === 0) {
-      // Empty container - show highlight if this is the drop target
-      if (isDragging && dragState.destinationParentId === node.id) {
-        return (
-          <div className="nested-container empty">
-            {renderInsertHighlight(0)}
-          </div>
-        );
-      }
-      return null;
+      // Empty container - show slot at index 0
+      return (
+        <div className="nested-container empty">
+          {renderInsertSlot(0)}
+        </div>
+      );
     }
 
     const elements: React.ReactNode[] = [];
     
-    // Insert highlight before first child
-    elements.push(renderInsertHighlight(0));
+    // Insert slot before first child
+    elements.push(renderInsertSlot(0));
 
-    // Render each child with highlight after it
+    // Render each child with slot after it
     node.children.forEach((childId, index) => {
       const childNode = nodes[childId];
       if (!childNode) return;
@@ -199,8 +238,8 @@ export const Renderer: React.FC<RendererProps> = ({
         />
       );
       
-      // Insert highlight after this child
-      elements.push(renderInsertHighlight(index + 1));
+      // Insert slot after this child
+      elements.push(renderInsertSlot(index + 1));
     });
 
     return elements;

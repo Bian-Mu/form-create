@@ -60,6 +60,7 @@ export function isAncestorPath(ancestorPath: string, descendantPath: string): bo
 
 /**
  * Move node in the node map to a new parent at a specific index
+ * Handles same-parent reordering by adjusting index when removal happens before insertion
  */
 export function moveNodeInMap(
   nodes: Record<string, FormNode>,
@@ -69,11 +70,16 @@ export function moveNodeInMap(
 ): Record<string, FormNode> {
   const newNodes = { ...nodes };
   
-  // Remove from old parent
+  // Find and remove from old parent, tracking source info
+  let sourceParentId: string | null = null;
+  let sourceIndex = -1;
+  
   Object.values(newNodes).forEach((node) => {
     if (node.children) {
       const index = node.children.indexOf(nodeId);
       if (index !== -1) {
+        sourceParentId = node.id;
+        sourceIndex = index;
         node.children = [...node.children];
         node.children.splice(index, 1);
       }
@@ -84,7 +90,14 @@ export function moveNodeInMap(
   const targetParent = newNodes[targetParentId];
   if (targetParent && targetParent.children) {
     targetParent.children = [...targetParent.children];
-    const insertIndex = Math.min(targetIndex, targetParent.children.length);
+    
+    // If moving within same parent and removal was before target, adjust index
+    let adjustedIndex = targetIndex;
+    if (sourceParentId === targetParentId && sourceIndex !== -1 && sourceIndex < targetIndex) {
+      adjustedIndex = targetIndex - 1;
+    }
+    
+    const insertIndex = Math.min(adjustedIndex, targetParent.children.length);
     targetParent.children.splice(insertIndex, 0, nodeId);
   }
 
