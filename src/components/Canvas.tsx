@@ -15,12 +15,13 @@ export const Canvas: React.FC = () => {
   const dragState = useSelector((state: RootState) => state.drag);
   const rootNode = nodes[rootId];
 
+  // Use slot format with '::' delimiter for consistency with Renderer
   const { setNodeRef, isOver } = useDroppable({
-    id: rootId,
+    id: `${rootId}::0`,
     data: { 
-      accepts: ['palette'], 
-      nodeId: rootId,
-      path: rootId,
+      parentId: rootId,
+      index: 0,
+      type: 'slot',
     },
   });
 
@@ -38,7 +39,6 @@ export const Canvas: React.FC = () => {
       bodyStyle={{ minHeight: '400px', padding: '16px' }}
     >
       <div
-        ref={setNodeRef}
         className={dragState.isDragging ? 'global-dragging' : ''}
         style={{
           minHeight: '400px',
@@ -49,10 +49,10 @@ export const Canvas: React.FC = () => {
         }}
       >
         {!hasChildren ? (
-          <>
+          <div ref={setNodeRef} style={{ minHeight: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {showInsertHighlight && <div className="insert-highlight" />}
             <Empty description="Drag components here to start building your form" />
-          </>
+          </div>
         ) : (
           <Renderer
             node={rootNode}

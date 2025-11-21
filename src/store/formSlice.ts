@@ -95,17 +95,31 @@ const formSlice = createSlice({
     ) => {
       const { nodeId, newParentId, newIndex } = action.payload;
 
+      // Find source parent and index
+      let sourceParentId: string | null = null;
+      let sourceIndex = -1;
+      
       // Remove from old parent
       Object.values(state.nodes).forEach((node) => {
         if (node.children) {
-          node.children = node.children.filter((id) => id !== nodeId);
+          const idx = node.children.indexOf(nodeId);
+          if (idx !== -1) {
+            sourceParentId = node.id;
+            sourceIndex = idx;
+            node.children = node.children.filter((id) => id !== nodeId);
+          }
         }
       });
 
-      // Add to new parent at index
+      // Add to new parent at index, adjusting for same-parent moves
       const newParent = state.nodes[newParentId];
       if (newParent && newParent.children) {
-        newParent.children.splice(newIndex, 0, nodeId);
+        let adjustedIndex = newIndex;
+        // If moving within same parent and removal was before target, adjust index
+        if (sourceParentId === newParentId && sourceIndex !== -1 && sourceIndex < newIndex) {
+          adjustedIndex = newIndex - 1;
+        }
+        newParent.children.splice(adjustedIndex, 0, nodeId);
       }
     },
 

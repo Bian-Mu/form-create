@@ -41,6 +41,18 @@
   pointer-events: none;
 }
 
+/* Insert slot - droppable zone for precise insertion */
+.insert-slot {
+  position: relative;
+  min-height: 2px;
+  margin: 2px 0;
+  transition: all 0.2s ease;
+}
+
+.insert-slot.active {
+  min-height: 8px;
+}
+
 /* Insert highlight indicator - shows where element will be dropped (brighter blue) */
 .insert-highlight {
   position: relative;

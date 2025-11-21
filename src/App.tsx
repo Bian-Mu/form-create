@@ -72,18 +72,28 @@ function App() {
     const { over } = event;
     if (over) {
       const overData = over.data.current;
-      const parentId = overData?.nodeId || 'root';
       
-      // Calculate the index based on the children's position
-      const parent = nodes[parentId];
-      const childrenCount = parent?.children?.length || 0;
-      
-      dispatch(
-        updateDragDestination({
-          destinationParentId: parentId,
-          destinationIndex: childrenCount, // Default to end
-        })
-      );
+      // Check if this is a slot droppable (format: "path@index")
+      if (overData?.type === 'slot') {
+        dispatch(
+          updateDragDestination({
+            destinationParentId: overData.parentId,
+            destinationIndex: overData.index,
+          })
+        );
+      } else {
+        // Fallback for non-slot droppables (shouldn't happen now but kept for safety)
+        const parentId = overData?.nodeId || 'root';
+        const parent = nodes[parentId];
+        const childrenCount = parent?.children?.length || 0;
+        
+        dispatch(
+          updateDragDestination({
+            destinationParentId: parentId,
+            destinationIndex: childrenCount,
+          })
+        );
+      }
     }
   };
 
@@ -91,32 +101,36 @@ function App() {
     // End drag state
     dispatch(endDrag());
 
-    const result = handleDragEnd(event);
+    const { over } = event;
+    if (!over) return;
     
-    if (dragState.dragType === 'palette' && result?.shouldAdd && result.nodeType) {
+    const overData = over.data.current;
+    
+    if (dragState.dragType === 'palette') {
       // Adding new component from palette
-      dispatch(
-        addNode({
-          parentId: result.parentId,
-          node: { type: result.nodeType },
-          index: result.index,
-        })
-      );
-      message.success(`Added ${result.nodeType} to form`);
+      const result = handleDragEnd(event);
+      if (result?.shouldAdd && result.nodeType) {
+        // Use slot data if available, otherwise fall back to result
+        const parentId = overData?.type === 'slot' ? overData.parentId : result.parentId;
+        const index = overData?.type === 'slot' ? overData.index : result.index;
+        
+        dispatch(
+          addNode({
+            parentId,
+            node: { type: result.nodeType },
+            index,
+          })
+        );
+        message.success(`Added ${result.nodeType} to form`);
+      }
     } else if (dragState.dragType === 'canvas' && dragState.sourceParentId && dragState.draggingId) {
       // Reordering existing component
-      const { over } = event;
-      if (over) {
-        const overData = over.data.current;
-        const targetParentId = overData?.nodeId || 'root';
-        const targetParent = nodes[targetParentId];
-        const targetIndex = targetParent?.children?.length || 0;
-        
+      if (overData?.type === 'slot') {
         dispatch(
           moveNode({
             nodeId: dragState.draggingId,
-            newParentId: targetParentId,
-            newIndex: targetIndex,
+            newParentId: overData.parentId,
+            newIndex: overData.index,
           })
         );
         message.success('Component moved successfully');
