@@ -1,18 +1,14 @@
-/**
- * Drag state slice - Manages lightweight temporary drag state
- * Tracks dragging element, source, and destination for visual feedback
- * without mutating the main form structure during drag operations
- */
+
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
 export interface DragState {
-  draggingId: string | null; // ID of the element being dragged
-  sourceParentId: string | null; // Parent of the dragged element
-  sourceIndex: number | null; // Original index in parent
-  destinationParentId: string | null; // Target parent for drop
-  destinationIndex: number | null; // Target index in parent
-  isDragging: boolean; // Whether a drag operation is active
-  dragType: 'palette' | 'canvas' | null; // Source of drag (new component vs reorder)
+  draggingId: string | null;
+  sourceParentId: string | null;
+  sourceIndex: number | null;
+  destinationParentId: string | null;
+  destinationIndex: number | null;
+  isDragging: boolean;
+  dragType: 'palette' | 'canvas' | null;
 }
 
 const initialState: DragState = {

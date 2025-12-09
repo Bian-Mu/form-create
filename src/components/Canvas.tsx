@@ -1,7 +1,4 @@
-/**
- * Canvas component - main editing area with drag-and-drop support
- * Shows insert highlights during drag operations with path-based droppable IDs
- */
+
 import { Card, Empty } from 'antd';
 import { useDroppable } from '@dnd-kit/core';
 import { useSelector, useDispatch } from 'react-redux';
@@ -18,7 +15,7 @@ export const Canvas: React.FC = () => {
   // Use slot format with '::' delimiter for consistency with Renderer
   const { setNodeRef, isOver } = useDroppable({
     id: `${rootId}::0`,
-    data: { 
+    data: {
       parentId: rootId,
       index: 0,
       type: 'slot',

@@ -1,9 +1,4 @@
-/**
- * Recursive renderer that converts JSON nodes to React components
- * Handles nested containers with path-based droppable IDs
- * Shows insert highlights at all possible insertion positions
- * Supports drag-to-reorder for existing components
- */
+
 import React, { useState, useRef, useCallback } from 'react';
 import { Input, Select, Checkbox, Button, Typography, Divider } from 'antd';
 import { useDroppable, useDraggable } from '@dnd-kit/core';
@@ -25,35 +20,35 @@ interface InsertSlotProps {
 
 const InsertSlot: React.FC<InsertSlotProps> = ({ path, parentId, index, isPreview }) => {
   const dragState = useSelector((state: RootState) => state.drag);
-  
+
   // Use '::' delimiter to avoid conflicts with path separator '/'
   const slotId = `${path}::${index}`;
-  
+
   const { setNodeRef: setSlotRef, isOver: isSlotOver } = useDroppable({
     id: slotId,
     disabled: isPreview,
-    data: { 
+    data: {
       parentId,
       parentPath: path,
       index,
       type: 'slot',
     },
   });
-  
+
   const isDragging = dragState.isDragging;
-  const shouldShowHighlight = 
+  const shouldShowHighlight =
     isDragging && (
-      isSlotOver || 
+      isSlotOver ||
       (dragState.destinationParentId === parentId && dragState.destinationIndex === index)
     );
 
   if (isPreview) return null;
 
   return (
-    <div 
+    <div
       ref={setSlotRef}
       className={shouldShowHighlight ? 'insert-slot active' : 'insert-slot'}
-      style={{ 
+      style={{
         minHeight: isDragging ? '8px' : '2px',
         margin: '2px 0',
         transition: 'all 0.2s ease',
@@ -67,18 +62,18 @@ const InsertSlot: React.FC<InsertSlotProps> = ({ path, parentId, index, isPrevie
 // Long-press hook for drag handle
 const useLongPress = (callback: () => void, ms = 500) => {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
+
   const start = useCallback(() => {
     timeoutRef.current = setTimeout(callback, ms);
   }, [callback, ms]);
-  
+
   const clear = useCallback(() => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
   }, []);
-  
+
   return { onMouseDown: start, onMouseUp: clear, onMouseLeave: clear };
 };
 
@@ -103,32 +98,32 @@ export const Renderer: React.FC<RendererProps> = ({
 }) => {
   const dragState = useSelector((state: RootState) => state.drag);
   const [showHandle, setShowHandle] = useState(false);
-  
+
   // Long-press handler
   const longPressProps = useLongPress(() => {
     if (!isPreview && node.id !== 'root') {
       setShowHandle(true);
     }
   }, 500);
-  
+
   // Make component draggable (except root)
   const { attributes, listeners, setNodeRef: setDraggableRef, isDragging: isThisNodeDragging } = useDraggable({
     id: node.id,
     disabled: isPreview || node.id === 'root' || !showHandle,
-    data: { 
+    data: {
       nodeId: node.id,
       source: 'canvas',
       parentPath: parentPath,
     },
   });
-  
+
   // Reset handle when dragging ends
   React.useEffect(() => {
     if (!dragState.isDragging) {
       setShowHandle(false);
     }
   }, [dragState.isDragging]);
-  
+
   const handleClick = (e: React.MouseEvent) => {
     if (!isPreview && onSelect) {
       e.stopPropagation();
@@ -139,14 +134,14 @@ export const Renderer: React.FC<RendererProps> = ({
   const isContainer = ['container', 'row', 'col'].includes(node.type);
   const isDragging = dragState.isDragging;
   const isDropTarget = isDragging && dragState.destinationParentId === node.id;
-  const isAncestorOfTarget = isDragging && dragState.destinationParentId && 
+  const isAncestorOfTarget = isDragging && dragState.destinationParentId &&
     isAncestorPath(path, `${parentPath}/${dragState.destinationParentId}`);
 
   // Base style with always visible border
   const baseStyle: React.CSSProperties = {
     padding: '8px',
-    border: isSelected 
-      ? '2px solid #1890ff' 
+    border: isSelected
+      ? '2px solid #1890ff'
       : '1px solid #d0e8ff', // Always visible light blue border
     borderRadius: '4px',
     cursor: isPreview ? 'default' : 'pointer',
@@ -164,7 +159,7 @@ export const Renderer: React.FC<RendererProps> = ({
   // Render insert slot as a droppable zone at specific index
   const renderInsertSlot = (index: number) => {
     return (
-      <InsertSlot 
+      <InsertSlot
         key={`slot-${index}`}
         path={path}
         parentId={node.id}
@@ -177,9 +172,9 @@ export const Renderer: React.FC<RendererProps> = ({
   // Render drag handle when shown after long-press
   const renderDragHandle = () => {
     if (isPreview || node.id === 'root' || !showHandle) return null;
-    
+
     return (
-      <div 
+      <div
         {...attributes}
         {...listeners}
         className="drag-handle"
@@ -216,7 +211,7 @@ export const Renderer: React.FC<RendererProps> = ({
     }
 
     const elements: React.ReactNode[] = [];
-    
+
     // Insert slot before first child
     elements.push(renderInsertSlot(0));
 
@@ -224,7 +219,7 @@ export const Renderer: React.FC<RendererProps> = ({
     node.children.forEach((childId, index) => {
       const childNode = nodes[childId];
       if (!childNode) return;
-      
+
       const childPath = `${path}/${childId}`;
       elements.push(
         <Renderer
@@ -238,7 +233,7 @@ export const Renderer: React.FC<RendererProps> = ({
           parentPath={path}
         />
       );
-      
+
       // Insert slot after this child
       elements.push(renderInsertSlot(index + 1));
     });
@@ -250,7 +245,7 @@ export const Renderer: React.FC<RendererProps> = ({
   const { setNodeRef: setDroppableRef } = useDroppable({
     id: path,
     disabled: !isContainer || isPreview,
-    data: { 
+    data: {
       nodeId: node.id,
       path,
       accepts: ['palette', 'canvas'],
@@ -277,15 +272,15 @@ export const Renderer: React.FC<RendererProps> = ({
   switch (node.type) {
     case 'container':
       return (
-        <div 
+        <div
           ref={combinedRef}
           {...getWrapperProps()}
-          style={{ 
-            ...baseStyle, 
-            display: 'flex', 
-            flexDirection: 'column', 
+          style={{
+            ...baseStyle,
+            display: 'flex',
+            flexDirection: 'column',
             gap: '8px',
-          }} 
+          }}
           onClick={handleClick}
         >
           {renderDragHandle()}
@@ -296,15 +291,15 @@ export const Renderer: React.FC<RendererProps> = ({
 
     case 'row':
       return (
-        <div 
+        <div
           ref={combinedRef}
           {...getWrapperProps()}
-          style={{ 
-            ...baseStyle, 
-            display: 'flex', 
-            flexDirection: 'row', 
+          style={{
+            ...baseStyle,
+            display: 'flex',
+            flexDirection: 'row',
             gap: '8px',
-          }} 
+          }}
           onClick={handleClick}
         >
           {renderDragHandle()}
@@ -314,16 +309,16 @@ export const Renderer: React.FC<RendererProps> = ({
 
     case 'col':
       return (
-        <div 
+        <div
           ref={combinedRef}
           {...getWrapperProps()}
-          style={{ 
-            ...baseStyle, 
-            display: 'flex', 
-            flexDirection: 'column', 
-            gap: '8px', 
+          style={{
+            ...baseStyle,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px',
             flex: 1,
-          }} 
+          }}
           onClick={handleClick}
         >
           {renderDragHandle()}

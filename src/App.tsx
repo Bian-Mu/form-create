@@ -1,8 +1,4 @@
-/**
- * Main App component - Form Designer
- * Integrates Palette, Canvas, and Properties Panel with DnD support
- * Includes custom drag preview with portal and drag state management
- */
+
 import { Layout, Button, Space, Typography, message } from 'antd';
 import {
   DndContext,
@@ -52,11 +48,11 @@ function App() {
       // Dragging from canvas (reordering)
       const nodeId = activeData.nodeId as string;
       const parentId = activeData.parentPath as string || 'root';
-      
+
       // Find the current index of this node in its parent
       const parent = nodes[parentId];
       const currentIndex = parent?.children?.indexOf(nodeId) ?? -1;
-      
+
       dispatch(
         startDrag({
           draggingId: nodeId,
@@ -72,7 +68,7 @@ function App() {
     const { over } = event;
     if (over) {
       const overData = over.data.current;
-      
+
       // Check if this is a slot droppable (format: "path@index")
       if (overData?.type === 'slot') {
         dispatch(
@@ -86,7 +82,7 @@ function App() {
         const parentId = overData?.nodeId || 'root';
         const parent = nodes[parentId];
         const childrenCount = parent?.children?.length || 0;
-        
+
         dispatch(
           updateDragDestination({
             destinationParentId: parentId,
@@ -103,9 +99,9 @@ function App() {
 
     const { over } = event;
     if (!over) return;
-    
+
     const overData = over.data.current;
-    
+
     if (dragState.dragType === 'palette') {
       // Adding new component from palette
       const result = handleDragEnd(event);
@@ -113,7 +109,7 @@ function App() {
         // Use slot data if available, otherwise fall back to result
         const parentId = overData?.type === 'slot' ? overData.parentId : result.parentId;
         const index = overData?.type === 'slot' ? overData.index : result.index;
-        
+
         dispatch(
           addNode({
             parentId,

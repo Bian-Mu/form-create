@@ -25,7 +25,6 @@ const formSlice = createSlice({
   name: 'form',
   initialState,
   reducers: {
-    // Add a new node to a parent
     addNode: (state, action: PayloadAction<{ parentId: string; node: Partial<FormNode>; index?: number }>) => {
       const { parentId, node, index } = action.payload;
       const id = generateId();
@@ -63,7 +62,6 @@ const formSlice = createSlice({
         }
       });
 
-      // Recursively remove children
       const removeRecursive = (id: string) => {
         const n = state.nodes[id];
         if (n?.children) {
@@ -79,7 +77,6 @@ const formSlice = createSlice({
       }
     },
 
-    // Update node properties
     updateNode: (state, action: PayloadAction<{ id: string; updates: Partial<FormNode> }>) => {
       const { id, updates } = action.payload;
       const node = state.nodes[id];
@@ -98,7 +95,7 @@ const formSlice = createSlice({
       // Find source parent and index
       let sourceParentId: string | null = null;
       let sourceIndex = -1;
-      
+
       // Remove from old parent
       Object.values(state.nodes).forEach((node) => {
         if (node.children) {
@@ -111,29 +108,30 @@ const formSlice = createSlice({
         }
       });
 
-      // Add to new parent at index, adjusting for same-parent moves
       const newParent = state.nodes[newParentId];
       if (newParent && newParent.children) {
         let adjustedIndex = newIndex;
-        // If moving within same parent and removal was before target, adjust index
+
+        // 4. 【核心逻辑】处理在同一父节点内移动的边缘情况
+        // 如果节点是在同一个父容器内移动，并且是向下移动（即原始位置靠前，目标位置靠后）
         if (sourceParentId === newParentId && sourceIndex !== -1 && sourceIndex < newIndex) {
           adjustedIndex = newIndex - 1;
         }
+        // 那么，因为我们已经从数组中移除了这个节点，
+        // 导致它后面的所有元素的索引都向前移动了一位。
+        // 所以，目标插入位置也需要减1来修正。
         newParent.children.splice(adjustedIndex, 0, nodeId);
       }
     },
 
-    // Select a node for editing
     selectNode: (state, action: PayloadAction<string | null>) => {
       state.selectedNodeId = action.payload;
     },
 
-    // Load entire form state
     loadForm: (_state, action: PayloadAction<FormState>) => {
       return action.payload;
     },
 
-    // Reset to initial state
     resetForm: () => initialState,
   },
 });

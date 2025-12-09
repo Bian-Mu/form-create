@@ -1,12 +1,8 @@
-/**
- * PDF export utility using @react-pdf/renderer
- */
-/* eslint-disable react-refresh/only-export-components */
+
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet, pdf } from '@react-pdf/renderer';
 import type { FormNode } from '../types';
 
-// Define styles for PDF
 const styles = StyleSheet.create({
   page: {
     padding: 30,
@@ -51,7 +47,6 @@ interface RenderPDFNodeProps {
   nodes: Record<string, FormNode>;
 }
 
-// Recursive component to render nodes in PDF
 const RenderPDFNode: React.FC<RenderPDFNodeProps> = ({ node, nodes }) => {
   const renderChildren = () => {
     if (!node.children) return null;
@@ -129,7 +124,7 @@ const RenderPDFNode: React.FC<RenderPDFNodeProps> = ({ node, nodes }) => {
   }
 };
 
-// Main PDF document component
+
 const FormPDFDocument: React.FC<{ nodes: Record<string, FormNode>; rootId: string }> = ({
   nodes,
   rootId,
@@ -145,9 +140,7 @@ const FormPDFDocument: React.FC<{ nodes: Record<string, FormNode>; rootId: strin
   );
 };
 
-/**
- * Export form to PDF
- */
+
 export async function exportToPDF(nodes: Record<string, FormNode>, rootId: string): Promise<void> {
   try {
     const doc = <FormPDFDocument nodes={nodes} rootId={rootId} />;
